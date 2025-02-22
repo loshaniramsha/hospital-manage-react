@@ -1,146 +1,292 @@
-import React, { useState } from 'react';
-import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
+import { useState } from "react";
+import Mother from "../model/MotherModel.ts";
 
-function PregnantMothersManage() {
-  const [showAddModal, setShowAddModal] = useState(false);
+interface Doctor {
+  id: number;
+  name: string;
+}
 
-  const mothers = [
-    { id: 1, name: 'Sarah Wilson', weeks: '28', nextCheckup: '2024-03-20', risk: 'Low' },
-    { id: 2, name: 'Emily Davis', weeks: '32', nextCheckup: '2024-03-15', risk: 'Medium' },
-    { id: 3, name: 'Jessica Brown', weeks: '24', nextCheckup: '2024-03-25', risk: 'Low' }
+interface Staff {
+  id: number;
+  name: string;
+}
+
+function MotherManage() {
+  const [mothers, setMothers] = useState<Mother[]>([]);
+  const [formData, setFormData] = useState<Mother>({
+    mother_id: 0,
+    mother_name: "",
+    mother_age: 0,
+    mother_address: "",
+    contact: "",
+    gravidity: 0,
+    register_date: new Date(),
+    delivery_date: new Date(),
+    clinic_date: new Date(),
+    doctor_id: 0,
+    staff_id: 0,
+  });
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editMother, setEditMother] = useState<Mother | null>(null);
+
+  const doctors: Doctor[] = [
+    { id: 1, name: "Dr. Smith" },
+    { id: 2, name: "Dr. Johnson" },
   ];
 
+  const staffMembers: Staff[] = [
+    { id: 1, name: "Nurse Anne" },
+    { id: 2, name: "Staff John" },
+  ];
+
+  const handleChange = (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "mother_age" || name === "doctor_id" || name === "staff_id" || name === "gravidity" ? Number(value) : value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editMother) {
+      setMothers(mothers.map(mother =>
+          mother.mother_id === editMother.mother_id ? { ...formData, mother_id: editMother.mother_id } : mother
+      ));
+    } else {
+      setMothers([...mothers, { ...formData, mother_id: mothers.length + 1 }]);
+    }
+    setFormData({
+      mother_id: 0,
+      mother_name: "",
+      mother_age: 0,
+      mother_address: "",
+      contact: "",
+      gravidity: 0,
+      register_date: new Date(),
+      delivery_date: new Date(),
+      clinic_date: new Date(),
+      doctor_id: 0,
+      staff_id: 0,
+    });
+    setIsModalOpen(false);
+    setEditMother(null);
+  };
+
+  const handleEdit = (mother: Mother) => {
+    setEditMother(mother);
+    setFormData(mother);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (mother_id: number) => {
+    setMothers(mothers.filter((mother) => mother.mother_id !== mother_id));
+  };
+
+  const filteredMothers = mothers.filter((mother) =>
+      mother.mother_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mother.contact.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Manage Pregnant Mothers</h2>
+      <div className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Registered Mothers</h3>
+
+        {/* Search bar */}
+        <input
+            type="text"
+            placeholder="Search by Name or Contact"
+            className="w-full p-2 mb-4 border rounded-lg"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+        />
+
         <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          <Plus className="w-5 h-5" />
-          Register Mother
+          Register New Mother
         </button>
-      </div>
 
-      <div className="bg-white rounded-lg shadow-sm border">
-        <div className="p-4 border-b">
-          <div className="relative">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search mothers..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-            />
-          </div>
-        </div>
+        {/* Modal */}
+        {isModalOpen && (
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-6 rounded-lg w-96">
+                <h3 className="text-lg font-semibold mb-4">{editMother ? "Edit Mother" : "Register New Mother"}</h3>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <input
+                      name="mother_name"
+                      type="text"
+                      placeholder="Mother's Name"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.mother_name}
+                      onChange={handleChange}
+                      required
+                  />
+                  <input
+                      name="mother_age"
+                      type="number"
+                      placeholder="Age"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.mother_age}
+                      onChange={handleChange}
+                      required
+                  />
+                  <input
+                      name="contact"
+                      type="tel"
+                      placeholder="Contact Number"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.contact}
+                      onChange={handleChange}
+                      required
+                  />
+                  <textarea
+                      name="mother_address"
+                      placeholder="Address"
+                      className="w-full p-2 border rounded-lg"
+                      rows={3}
+                      value={formData.mother_address}
+                      onChange={handleChange}
+                      required
+                  ></textarea>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weeks</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Checkup</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Level</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
+                  <input
+                      name="gravidity"
+                      type="number"
+                      placeholder="Gravidity"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.gravidity}
+                      onChange={handleChange}
+                      required
+                  />
+
+                  <input
+                      name="register_date"
+                      type="date"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.register_date.toISOString().split("T")[0]}
+                      onChange={handleChange}
+                      required
+                  />
+                  <input
+                      name="delivery_date"
+                      type="date"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.delivery_date.toISOString().split("T")[0]}
+                      onChange={handleChange}
+                      required
+                  />
+                  <input
+                      name="clinic_date"
+                      type="date"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.clinic_date.toISOString().split("T")[0]}
+                      onChange={handleChange}
+                      required
+                  />
+
+                  <select
+                      name="doctor_id"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.doctor_id}
+                      onChange={handleChange}
+                      required
+                  >
+                    <option value="">Select Doctor</option>
+                    {doctors.map((doc) => (
+                        <option key={doc.id} value={doc.id}>
+                          {doc.name}
+                        </option>
+                    ))}
+                  </select>
+
+                  <select
+                      name="staff_id"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.staff_id}
+                      onChange={handleChange}
+                      required
+                  >
+                    <option value="">Select Staff</option>
+                    {staffMembers.map((staff) => (
+                        <option key={staff.id} value={staff.id}>
+                          {staff.name}
+                        </option>
+                    ))}
+                  </select>
+
+                  <button
+                      type="submit"
+                      className="w-full bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
+                  >
+                    {editMother ? "Update Mother" : "Register Mother"}
+                  </button>
+                </form>
+                <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="mt-4 w-full text-center bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+        )}
+
+        {/* Table View */}
+        <div className="mt-6">
+          <table className="w-full border-collapse border border-gray-200">
+            <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2">ID</th>
+              <th className="border p-2">Mother Name</th>
+              <th className="border p-2">Age</th>
+              <th className="border p-2">Contact</th>
+              <th className="border p-2">Gravidity</th>
+              <th className="border p-2">Doctor</th>
+              <th className="border p-2">Staff</th>
+              <th className="border p-2">Actions</th>
+            </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {mothers.map((mother) => (
-                <tr key={mother.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{mother.name}</div>
+            <tbody>
+            {filteredMothers.map((mother) => (
+                <tr key={mother.mother_id} className="text-center">
+                  <td className="border p-2">{mother.mother_id}</td>
+                  <td className="border p-2">{mother.mother_name}</td>
+                  <td className="border p-2">{mother.mother_age}</td>
+                  <td className="border p-2">{mother.contact}</td>
+                  <td className="border p-2">{mother.gravidity}</td>
+                  <td className="border p-2">
+                    {doctors.find((doc) => doc.id === mother.doctor_id)?.name || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">{mother.weeks} weeks</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">{mother.nextCheckup}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      mother.risk === 'Low' ? 'bg-green-100 text-green-800' :
-                      mother.risk === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {mother.risk}
-                    </span>
+                  <td className="border p-2">
+                    {staffMembers.find((staff) => staff.id === mother.staff_id)?.name || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex gap-2">
-                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button className="p-1 text-red-600 hover:bg-red-50 rounded">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                  <td className="border p-2">
+                    <button
+                        onClick={() => handleEdit(mother)}
+                        className="bg-yellow-500 text-white px-2 py-1 rounded-md hover:bg-yellow-600"
+                    >
+                      Edit
+                    </button>
+                    <button
+                        onClick={() => handleDelete(mother.mother_id)}
+                        className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 ml-2"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
-              ))}
+            ))}
             </tbody>
           </table>
         </div>
       </div>
-
-      {/* Add Mother Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Register New Mother</h3>
-              <form className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                  <input type="text" className="w-full p-2 border rounded-lg" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                  <input type="number" className="w-full p-2 border rounded-lg" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Weeks Pregnant</label>
-                  <input type="number" className="w-full p-2 border rounded-lg" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-                  <input type="tel" className="w-full p-2 border rounded-lg" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Risk Level</label>
-                  <select className="w-full p-2 border rounded-lg">
-                    <option>Low</option>
-                    <option>Medium</option>
-                    <option>High</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Next Checkup Date</label>
-                  <input type="date" className="w-full p-2 border rounded-lg" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                  <textarea className="w-full p-2 border rounded-lg" rows={3}></textarea>
-                </div>
-                <div className="flex justify-end gap-2 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Register Mother
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
 
-export default PregnantMothersManage;
+export default MotherManage;
