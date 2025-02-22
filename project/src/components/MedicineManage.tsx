@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
+import {useState} from "react";
 
 function MedicineManage() {
   const [showAddModal, setShowAddModal] = useState(false);
