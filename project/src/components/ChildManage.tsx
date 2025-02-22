@@ -1,129 +1,273 @@
-import React, { useState } from 'react';
-import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
+import { useState } from "react";
+import Child from "../model/ChildModel.ts";
+
+interface Doctor {
+  id: number;
+  name: string;
+}
+
+interface Staff {
+  id: number;
+  name: string;
+}
 
 function ChildManage() {
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [children, setChildren] = useState<Child[]>([]);
+  const [formData, setFormData] = useState<Child>({
+    child_id: 0,
+    child_name: "",
+    mother_name: "",
+    contact: "",
+    address: "",
+    age: 0,
+    vaccine_status: "",
+    doctor_id: 0,
+    staff_id: 0,
+  });
 
-  const children = [
-    { id: 1, name: 'Alex Smith', age: '2 years', parent: 'John Smith', nextVaccine: '2024-03-20' },
-    { id: 2, name: 'Emma Johnson', age: '1 year', parent: 'Sarah Johnson', nextVaccine: '2024-03-25' },
-    { id: 3, name: 'Michael Brown', age: '3 years', parent: 'Robert Brown', nextVaccine: '2024-04-01' },
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editChild, setEditChild] = useState<Child | null>(null); // State to track the child being edited
+
+  const doctors: Doctor[] = [
+    { id: 1, name: "Dr. Smith" },
+    { id: 2, name: "Dr. Johnson" },
   ];
 
+  const staffMembers: Staff[] = [
+    { id: 1, name: "Nurse Anne" },
+    { id: 2, name: "Staff John" },
+  ];
+
+  const handleChange = (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "age" || name === "doctor_id" || name === "staff_id" ? Number(value) : value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editChild) {
+      setChildren(children.map(child =>
+          child.child_id === editChild.child_id ? { ...formData, child_id: editChild.child_id } : child
+      ));
+    } else {
+      setChildren([...children, { ...formData, child_id: children.length + 1 }]);
+    }
+    setFormData({
+      child_id: 0,
+      child_name: "",
+      mother_name: "",
+      contact: "",
+      address: "",
+      age: 0,
+      vaccine_status: "",
+      doctor_id: 0,
+      staff_id: 0,
+    });
+    setIsModalOpen(false);
+    setEditChild(null); // Reset the edit state
+  };
+
+  const handleEdit = (child: Child) => {
+    setEditChild(child);
+    setFormData(child);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (child_id: number) => {
+    setChildren(children.filter((child) => child.child_id !== child_id));
+  };
+
+  const filteredChildren = children.filter((child) =>
+      child.child_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      child.mother_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Manage Children</h2>
+      <div className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Registered Children</h3>
+
+        {/* Search bar */}
+        <input
+            type="text"
+            placeholder="Search by Child or Guardian's Name"
+            className="w-full p-2 mb-4 border rounded-lg"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+        />
+
         <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          <Plus className="w-5 h-5" />
-          Register Child
+          Register New Child
         </button>
-      </div>
 
-      <div className="bg-white rounded-lg shadow-sm border">
-        <div className="p-4 border-b">
-          <div className="relative">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search children..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-            />
-          </div>
-        </div>
+        {/* Modal */}
+        {isModalOpen && (
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-6 rounded-lg w-96">
+                <h3 className="text-lg font-semibold mb-4">{editChild ? "Edit Child" : "Register New Child"}</h3>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <input
+                      name="child_name"
+                      type="text"
+                      placeholder="Child's Name"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.child_name}
+                      onChange={handleChange}
+                      required
+                  />
+                  <input
+                      name="age"
+                      type="number"
+                      placeholder="Age"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.age}
+                      onChange={handleChange}
+                      required
+                  />
+                  <input
+                      name="mother_name"
+                      type="text"
+                      placeholder="Parent/Guardian Name"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.mother_name}
+                      onChange={handleChange}
+                      required
+                  />
+                  <input
+                      name="contact"
+                      type="tel"
+                      placeholder="Contact Number"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.contact}
+                      onChange={handleChange}
+                      required
+                  />
+                  <textarea
+                      name="address"
+                      placeholder="Address"
+                      className="w-full p-2 border rounded-lg"
+                      rows={3}
+                      value={formData.address}
+                      onChange={handleChange}
+                      required
+                  ></textarea>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parent/Guardian</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Vaccine</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
+                  <select
+                      name="doctor_id"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.doctor_id}
+                      onChange={handleChange}
+                      required
+                  >
+                    <option value="">Select Doctor</option>
+                    {doctors.map((doc) => (
+                        <option key={doc.id} value={doc.id}>
+                          {doc.name}
+                        </option>
+                    ))}
+                  </select>
+
+                  <select
+                      name="staff_id"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.staff_id}
+                      onChange={handleChange}
+                      required
+                  >
+                    <option value="">Select Staff</option>
+                    {staffMembers.map((staff) => (
+                        <option key={staff.id} value={staff.id}>
+                          {staff.name}
+                        </option>
+                    ))}
+                  </select>
+
+                  <select
+                      name="vaccine_status"
+                      className="w-full p-2 border rounded-lg"
+                      value={formData.vaccine_status}
+                      onChange={handleChange}
+                      required
+                  >
+                    <option value="">Vaccine Status</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending</option>
+                  </select>
+
+                  <button
+                      type="submit"
+                      className="w-full bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
+                  >
+                    {editChild ? "Update Child" : "Register Child"}
+                  </button>
+                </form>
+                <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="mt-4 w-full text-center bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+        )}
+
+        {/* Table View */}
+        <div className="mt-6">
+          <table className="w-full border-collapse border border-gray-200">
+            <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2">ID</th>
+              <th className="border p-2">Child Name</th>
+              <th className="border p-2">Age</th>
+              <th className="border p-2">Guardian</th>
+              <th className="border p-2">Doctor</th>
+              <th className="border p-2">Staff</th>
+              <th className="border p-2">Vaccine Status</th>
+              <th className="border p-2">Actions</th>
+            </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {children.map((child) => (
-                <tr key={child.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{child.name}</div>
+            <tbody>
+            {filteredChildren.map((child) => (
+                <tr key={child.child_id} className="text-center">
+                  <td className="border p-2">{child.child_id}</td>
+                  <td className="border p-2">{child.child_name}</td>
+                  <td className="border p-2">{child.age}</td>
+                  <td className="border p-2">{child.mother_name}</td>
+                  <td className="border p-2">
+                    {doctors.find((doc) => doc.id === child.doctor_id)?.name || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">{child.age}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">{child.parent}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
-                      {child.nextVaccine}
-                    </span>
+                  <td className="border p-2">
+                    {staffMembers.find((staff) => staff.id === child.staff_id)?.name || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex gap-2">
-                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button className="p-1 text-red-600 hover:bg-red-50 rounded">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                  <td className="border p-2">{child.vaccine_status}</td>
+                  <td className="border p-2">
+                    <button
+                        onClick={() => handleEdit(child)}
+                        className="text-yellow-500 hover:text-yellow-700 mr-2"
+                    >
+                      Edit
+                    </button>
+                    <button
+                        onClick={() => handleDelete(child.child_id)}
+                        className="text-red-500 hover:text-red-700"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
-              ))}
+            ))}
             </tbody>
           </table>
         </div>
       </div>
-
-      {/* Add Child Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Register New Child</h3>
-              <form className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Child's Name</label>
-                  <input type="text" className="w-full p-2 border rounded-lg" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                  <input type="date" className="w-full p-2 border rounded-lg" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Parent/Guardian Name</label>
-                  <input type="text" className="w-full p-2 border rounded-lg" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-                  <input type="tel" className="w-full p-2 border rounded-lg" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                  <textarea className="w-full p-2 border rounded-lg" rows={3}></textarea>
-                </div>
-                <div className="flex justify-end gap-2 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Register Child
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
 
