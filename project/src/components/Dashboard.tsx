@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Users, Baby, UserRound, Syringe, Pill as Pills, HeartPulse } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, color }: any) => (
