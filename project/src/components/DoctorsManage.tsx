@@ -1,21 +1,13 @@
 import { Plus, Search, Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
+import Doctor from "../model/DoctorModel.ts";
 
 function DoctorsManage() {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [doctors, setDoctors] = useState([
-    {
-      doctor_id: 1,
-      doctor_name: "Dr. John Doe",
-      doctor_register_number: "REG12345",
-      doctor_position: "Cardiologist",
-      contact: "123-456-7890",
-      email: "john.doe@example.com",
-    },
-  ]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
 
-  const [formData, setFormData] = useState({
-    doctor_id: "",
+  const [formData, setFormData] = useState<Doctor>({
+    doctor_id: 0,
     doctor_name: "",
     doctor_register_number: "",
     doctor_position: "",
@@ -24,16 +16,16 @@ function DoctorsManage() {
   });
 
   // Handle input changes
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setDoctors([...doctors, formData]);
+    setDoctors([...doctors, { ...formData, doctor_id: doctors.length + 1 }]);
     setFormData({
-      doctor_id: "",
+      doctor_id: 0,
       doctor_name: "",
       doctor_register_number: "",
       doctor_position: "",
@@ -112,19 +104,13 @@ function DoctorsManage() {
               <div className="bg-white rounded-lg max-w-md w-full p-6">
                 <h3 className="text-lg font-semibold mb-4">Add New Doctor</h3>
                 <form className="space-y-4" onSubmit={handleSubmit}>
-                  {[
-                    { label: "ID", name: "doctor_id", type: "text" },
-                    { label: "Name", name: "doctor_name", type: "text" },
-                    { label: "Register Number", name: "doctor_register_number", type: "text" },
-                    { label: "Contact Number", name: "contact", type: "tel" },
-                    { label: "Email", name: "email", type: "email" },
-                  ].map(({ label, name, type }) => (
-                      <div key={name}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                  {["doctor_name", "doctor_register_number", "contact", "email"].map((field) => (
+                      <div key={field}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{field.replace('_', ' ')}</label>
                         <input
-                            type={type}
-                            name={name}
-                            value={formData[name]}
+                            type="text"
+                            name={field}
+                            value={formData[field] as string}
                             onChange={handleChange}
                             className="w-full p-2 border rounded-lg"
                             required
@@ -138,9 +124,7 @@ function DoctorsManage() {
                     <select name="doctor_position" value={formData.doctor_position} onChange={handleChange} className="w-full p-2 border rounded-lg" required>
                       <option value="">Select Doctor Type</option>
                       {["General Physician", "Pediatrician", "Cardiologist", "Dermatologist", "Neurologist", "Orthopedic Surgeon", "Gynecologist", "Dentist", "Psychiatrist"].map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
+                          <option key={type} value={type}>{type}</option>
                       ))}
                     </select>
                   </div>
