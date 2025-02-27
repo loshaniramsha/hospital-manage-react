@@ -31,18 +31,22 @@ Authentication: JWT
 
 
 🛠️ Setup Instructions
+
 1️⃣ Clone the Repository :
 git clone https://github.com/yourusername/hospital-management-system.git  
 cd hospital-management-system
+
 2️⃣ Install Dependencies :
 cd backend  
 npm install ,  
 cd frontend  
 npm install  
+
 3️⃣ Configure Environment Variables
 PORT=5000  
 MONGO_URI=your_mongodb_connection_string  
 JWT_SECRET=your_jwt_secret_key  
+
 4️⃣ Start the Application
 Backend :
 cd backend  
