@@ -33,7 +33,7 @@ Authentication: JWT
 🛠️ Setup Instructions
 
 1️⃣ Clone the Repository :
-git clone https://github.com/yourusername/hospital-management-system.git  
+git clone [https://github.com/yourusername/hospital-management-system.git](https://github.com/loshaniramsha/hospital-manage-react.git)  
 cd hospital-management-system
 
 2️⃣ Install Dependencies :
